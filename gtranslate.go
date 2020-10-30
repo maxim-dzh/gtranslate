@@ -1,10 +1,12 @@
 package gtranslate
 
 import (
-	"golang.org/x/text/language"
 	"time"
+
+	"golang.org/x/text/language"
 )
 
+// GoogleHost ...
 var GoogleHost = "google.com"
 
 // TranslationParams is a util struct to pass as parameter to indicate how to translate
