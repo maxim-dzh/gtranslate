@@ -2,11 +2,14 @@ package gtranslate
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/text/language"
@@ -14,7 +17,10 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-var ttk otto.Value
+var (
+	ttkMx sync.Mutex
+	ttk   otto.Value
+)
 
 func init() {
 	ttk, _ = otto.ToValue("0")
@@ -40,11 +46,15 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 		}
 	}
 
+	ttkMx.Lock()
 	t, _ := otto.ToValue(text)
+	ttkMx.Unlock()
 
 	urll := fmt.Sprintf("https://translate.%s/translate_a/single", GoogleHost)
 
+	ttkMx.Lock()
 	token := get(t, ttk)
+	ttkMx.Unlock()
 
 	data := map[string]string{
 		"client": "gtx",
@@ -98,6 +108,7 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 			time.Sleep(delay)
 		}
 	}
+	defer r.Body.Close()
 
 	raw, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -123,5 +134,8 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 		}
 	}
 
+	if text != "" && strings.TrimSpace(responseText) == "" {
+		return "", errors.New("impossible to translate")
+	}
 	return responseText, nil
 }
