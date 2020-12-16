@@ -89,6 +89,7 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 	u.RawQuery = parameters.Encode()
 
 	var r *http.Response
+	var success bool
 
 	for tries > 0 {
 		r, err = http.Get(u.String())
@@ -100,6 +101,7 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 		}
 
 		if r.StatusCode == http.StatusOK {
+			success = true
 			break
 		}
 
@@ -107,6 +109,10 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 		time.Sleep(delay)
 	}
 	defer r.Body.Close()
+	if !success {
+		err = fmt.Errorf("could not translate word")
+		return "", err
+	}
 
 	raw, err := ioutil.ReadAll(r.Body)
 	if err != nil {
