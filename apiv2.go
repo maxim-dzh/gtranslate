@@ -103,10 +103,8 @@ func translate(text, from, to string, withVerification bool, tries int, delay ti
 			break
 		}
 
-		if r.StatusCode == http.StatusForbidden {
-			tries--
-			time.Sleep(delay)
-		}
+		tries--
+		time.Sleep(delay)
 	}
 	defer r.Body.Close()
 
